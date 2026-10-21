@@ -5,6 +5,7 @@
 const I18N = {
   zh: {
     "None": "无",
+    "Removing {name}…": "正在移除 {name}…",
     "Prompt": "提示词",
     "Request hook": "请求 Hook",
     "Gateway request hook": "网关请求 Hook",
@@ -3842,6 +3843,7 @@ const I18N = {
   },
   "zh-TW": {
     "None": "無",
+    "Removing {name}…": "正在移除 {name}…",
     "Prompt": "提示詞",
     "Request hook": "請求 Hook",
     "Gateway request hook": "閘道請求 Hook",
@@ -7664,6 +7666,7 @@ const I18N = {
   },
   ja: {
     "None": "なし",
+    "Removing {name}…": "{name} を削除しています…",
     "Prompt": "プロンプト",
     "Request hook": "リクエストフック",
     "Gateway request hook": "ゲートウェイリクエストフック",
@@ -11488,6 +11491,7 @@ const I18N = {
   },
   de: {
     "None": "Keine",
+    "Removing {name}…": "{name} wird entfernt…",
     "Prompt": "Prompt",
     "Request hook": "Anfrage-Hook",
     "Gateway request hook": "Gateway-Anfrage-Hook",

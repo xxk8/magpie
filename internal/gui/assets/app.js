@@ -14064,19 +14064,36 @@ function runsOutText(w, when = resetClock) {
 }
 
 // accountAction changes which account a provider uses, or which it has,
-// and leaves its editor open on the result.
+// and leaves its editor open on the result. A removal (an account's, a
+// key's) shows at once, gone from its list, and says so when the server
+// has gone through with it (Discord: 移除确实可以了，但是会有一会儿等待
+// 时间): the turn after it is the server's.
 async function accountAction(path, body, okMsg, confirmed = false) {
-  const key = path === "keys/remove" && providers?.providers?.find((p) => p.id === body.id)?.keyList?.find((k) => k.id === body.ref);
+  const p = path === "keys/remove" && providers?.providers?.find((x) => x.id === body.id);
+  const key = path === "keys/remove" && p?.keyList?.find((k) => k.id === body.ref);
   if (!confirmed && (path === "login/forget" || path === "keys/remove") && !await confirmRemoval(body.user || key?.name || key?.masked || body.ref,
     "This account or key will stop being used for requests. You will need to add it again to use it.")) return false;
+  const name = body.user || key?.name || key?.masked || body.ref;
+  // an ask of the page's own (a batch of saved accounts, a sign-out) holds
+  // the dialog it is answered in: redrawing the page under it would take
+  // that away before its next request, so only a removal asked by the
+  // editor's own dialog shows ahead of the server
+  const undo = confirmAsk ? null : path === "login/forget" ? goneAhead(body.agent, body.user) : path === "keys/remove" ? goneKeyAhead(p, key) : null;
+  if (undo) { renderProviders(); saidAway(name); }
   try {
     providers = await api(path, body);
+    if (undo) goneLand();
     renderProviders();
-    state = await api("state");
-    renderAgents();
     saidMoved(okMsg);
+    // the agents' side is the server's, read behind the page: the list
+    // already shows the change, and the agents catch up as it comes
+    if (path === "login/forget") {
+      api("state").then((s) => { state = s; renderAgents(); },
+        (e) => { if (!editorError(e.message, "err")) status(e.message, "err"); });
+    }
     return true;
   } catch (e) {
+    if (undo) { undo(); renderProviders(); }
     if (!editorError(e.message, "err")) status(e.message, "err");
     document.querySelector(".editor .busy")?.classList.remove("busy");
     return false;
@@ -15001,6 +15018,58 @@ function doneSaving(b) {
 // saidMoved says what was done, and which agents it moved off models it
 // took away (a provider switched off or removed, the last account signed
 // out: #200), each to the same model elsewhere or back to its default.
+// goneShown: a removal is on its way to the server, so the page leaves the
+// account or key out already (Discord: 移除确实可以了，但是会有一会儿等待
+// 时间). One at a time: a second removal waits for the first to answer.
+let goneShown = false;
+// clonePage copies what the page draws, as JSON, so a removal can be taken
+// out of the copy and put back whole if the server refuses.
+const clonePage = (x) => JSON.parse(JSON.stringify(x));
+// goneAhead takes the account out of the page now, and answers how to put
+// it back if the server refuses; null when one is already on its way, or
+// when the page doesn't list it (nothing to take out). The last account is
+// the provider's sign-in, and the server takes the provider's row with it:
+// that one waits for the answer rather than leave a row with no account.
+function goneAhead(agent, user) {
+  if (goneShown || !providers) return null;
+  const who = String(user || "").toLowerCase();
+  const was = providers;
+  providers = clonePage(providers);
+  let seen = false;
+  for (const p of providers.providers) {
+    if (p.account?.agent !== agent || !p.account.logins) continue;
+    const kept = p.account.logins.filter((l) => String(l.user || "").toLowerCase() !== who);
+    if (kept.length === p.account.logins.length || !kept.length) continue;
+    seen = true;
+    p.account.logins = kept;
+    p.account.user = [kept.find((l) => l.active), ...kept].find(Boolean)?.user;
+  }
+  if (!seen) { providers = was; return null; }
+  goneShown = true;
+  return () => { providers = was; goneShown = false; };
+}
+// goneLand is goneAhead's when the server went through with it: what was
+// taken out stays out, as the next list from the server has it too.
+function goneLand() { goneShown = false; }
+// goneKeyAhead is goneAhead for a key of a provider's: the same in the
+// keys list, kept in the list itself so its place is the rows' own.
+function goneKeyAhead(p, k) {
+  if (goneShown || !providers || !p?.keyList || !k) return null;
+  if (!p.keyList.some((x) => x.id === k.id)) return null;
+  const was = providers;
+  providers = clonePage(providers);
+  p = providers.providers.find((x) => x.id === p.id);
+  if (!p) { providers = was; return null; }
+  goneShown = true;
+  p.keyList = p.keyList.filter((x) => x.id !== k.id);
+  return () => { providers = was; goneShown = false; };
+}
+// saidAway says a removal is under way; the server's answer takes its
+// place. The status line outlasts a slow server.
+function saidAway(name) {
+  status(t("Removing {name}…", { name }), "", 60000);
+}
+
 function saidMoved(okMsg, list = providers?.moved) {
   // one magpie couldn't move (its file unwritable) is still on the model
   // gone, and the change made all the same
