@@ -539,6 +539,15 @@ body.mac .modal .editor.framed > .ebody { overflow-y: scroll; padding-right: 10p
    picked (@LingYi_Stu on X). The other pages have no such grid and keep the
    8px while short */
 body.window :is(#view-usage, #view-routing) { overflow-y: scroll; }
+/* Agents has no such grid, but Install another agent unrolls a page of its
+   own under the list: the page started to scroll, the bar took its 8px out
+   of the width, and every row's switches and models jumped left and back as
+   it opened and closed (2026-10-20). Its room is kept the same way, out of
+   the right padding rather than the page, so the rows keep the width and
+   place they had. The browser's page is not the window here: its own bar is
+   the browser's, and the page keeps the padding every other page has */
+body.window:not(.web) #view-agents { overflow-y: scroll; padding-right: max(8px, calc(50% - 608px)); }
+body.window:not(.web):not(.mac) #view-agents { padding-right: max(6px, calc(50% - 610px)); }
 .list { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; flex: none; }
 body.panel .list { border: 0; border-radius: 10px; box-shadow: var(--card-edge); }
 .row { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 5px 9px 5px 11px; }

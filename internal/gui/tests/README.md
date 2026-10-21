@@ -939,6 +939,14 @@ accounts saved in magpie: the Providers line naming them has Remove, whose
 dialog lists them; Cancel and Escape post nothing, Remove posts
 login/forget once per account and the line goes; in English and Chinese.
 
+`agents-install-shift.test.cjs` checks Install another agent unfolding its
+list under the Agents page moves nothing sideways (2026-10-20: 点击安装
+其他agent展开会右边抖动): the page keeps its width while it starts to
+scroll, and the rows keep their left edge and width as the list opens and
+closes. The Mac window's 8px bar is the one that took it. English and
+Chinese, Chromium and WebKit:
+`node --test internal/gui/tests/agents-install-shift.test.cjs`
+
 `codex-signout.test.cjs` opens Codex with one account (mamba on Discord: it
 couldn't be removed while Codex was signed in to it): its row has Sign out,
 asked in the app's own dialog; Cancel and Escape post nothing and go back to
