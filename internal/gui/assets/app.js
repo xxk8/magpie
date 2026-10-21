@@ -7683,6 +7683,8 @@ function confirmAction(title, message, action) {
     });
     dialog.addEventListener("click", (event) => { if (onBackdrop(event)) finish(false); });
     // Keep the underlying editor's Escape handlers from seeing this dialog.
+    // Enter is not the dialog's yes: it does what the focused button does,
+    // and Cancel has the focus when the dialog opens, so Enter declines.
     dialog.addEventListener("keydown", (event) => {
       event.stopPropagation();
       if (event.key !== "Tab") return;

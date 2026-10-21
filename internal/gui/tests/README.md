@@ -939,6 +939,24 @@ accounts saved in magpie: the Providers line naming them has Remove, whose
 dialog lists them; Cancel and Escape post nothing, Remove posts
 login/forget once per account and the line goes; in English and Chinese.
 
+`remove-at-once.test.cjs` checks a removal shows when it is confirmed, not
+when the server answers (Discord: 移除确实可以了，但是会有一会儿等待时间):
+the account or key is gone from its list at once, with "Removing {name}…"
+in the status line until the server's answer takes its place, and a
+refusal puts it back where it was with why. A key's list keeps its count,
+the account not removed stays, and the page keeps the width it had. The
+removal's answer is held by the test, so nothing depends on how fast the
+server is. English and Chinese, Chromium and WebKit:
+`node --test internal/gui/tests/remove-at-once.test.cjs`
+
+`confirm-enter-cancels.test.cjs` holds the app's own confirmation to its
+focused button (Discord: 删除软件的时候弹窗了但是回车没反应, then
+删除回车操作): it opens with Cancel focused, so Enter is a Cancel and
+nothing is removed; only the Remove button, clicked or reached with Tab
+and pressed, removes. Escape cancels too, and a dialog's key never reaches
+the page behind it. English and Chinese, Chromium and WebKit:
+`node --test internal/gui/tests/confirm-enter-cancels.test.cjs`
+
 `agents-install-shift.test.cjs` checks Install another agent unfolding its
 list under the Agents page moves nothing sideways (2026-10-20: 点击安装
 其他agent展开会右边抖动): the page keeps its width while it starts to
